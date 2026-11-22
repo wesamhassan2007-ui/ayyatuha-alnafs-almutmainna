@@ -411,8 +411,10 @@ function go(v){ view = v; render(); window.scrollTo(0,0); }
 /* ============ تسجيل الدخول ============ */
 function renderLogin(){
   return `<div class="login">
+    <div class="center"><h1 style="margin:0 0 4px;font-size:30px;color:var(--gold)">أيتها النفس المطمئنة</h1></div>
     <div class="logo">${ic('book')}</div>
     <div class="center"><h1 style="margin:0 0 6px;font-size:24px">المرحومين من آل بغدادي وآل أيوب</h1>
+    <p style="margin:0 0 8px;font-size:18px;color:var(--ink)">أهلاً وسهلاً بك</p>
     <p class="hint">اهدِ عملاً صالحاً لروح من فقدنا، وسجّله ليُحصى ويُشجّع غيرك</p>${LIVE ? '' : '<span class="demo-tag">نسخة تجريبية</span>'}</div>
     <div class="card" style="margin-top:22px">
       <div class="field"><label>الاسم</label><input id="lgName" placeholder="مثلاً: أبو علي" value="${esc(login.name||'')}"></div>
