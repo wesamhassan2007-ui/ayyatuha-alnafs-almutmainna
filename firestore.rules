@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null && request.auth.token.email != null; }
+    // رقم الهاتف مأخوذ من الحساب: 9613123456@ajr-family.app ← +9613123456
+    function myPhone() { return '+' + request.auth.token.email.split('@')[0]; }
+    function configDoc() { return /databases/$(database)/documents/config/main; }
+    function isProjectAdmin() {
+      return signedIn() && exists(configDoc()) && myPhone() in get(configDoc()).data.admins;
+    }
+    function isMember(sec) { return myPhone() in sec.memberPhones; }
+    function isSectionAdmin(sec) { return sec.members.get(myPhone(), '') == 'admin'; }
+
+    // إعدادات المشروع: مدراء المشروع وأنواع الأعمال
+    match /config/main {
+      allow read: if signedIn();
+      // أول من يدخل يصبح مدير المشروع
+      allow create: if signedIn() && request.resource.data.admins == [myPhone()];
+      allow update: if isProjectAdmin();
+    }
+
+    // أسماء الأعضاء
+    match /users/{phone} {
+      allow read, write: if signedIn();
+    }
+
+    // الصفحات (الأقسام)
+    match /sections/{sectionId} {
+      allow read: if signedIn() && (isProjectAdmin() || isMember(resource.data));
+      allow create, delete: if isProjectAdmin();
+      allow update: if signedIn() && (
+        isProjectAdmin()
+        || isSectionAdmin(resource.data)
+        // العضو العادي يعدّل الختمة فقط
+        || (isMember(resource.data)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['khatma']))
+      );
+    }
+
+    // الإهداءات
+    match /logs/{logId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.p == myPhone();
+      allow delete: if isProjectAdmin();
+    }
+  }
+}
